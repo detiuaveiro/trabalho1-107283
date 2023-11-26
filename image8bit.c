@@ -171,6 +171,7 @@ Image ImageCreate(int width, int height, uint8 maxval) { ///
   assert (width >= 0);
   assert (height >= 0);
   assert (0 < maxval && maxval <= PixMax);
+  // Allocating memory for both the Image structure and the pixel array inside said structure
   Image img = (Image)malloc(sizeof(Image*));
   img->pixel = (uint8*)malloc(sizeof(uint8) * width * height);
   if (img == NULL) {
@@ -309,6 +310,7 @@ void ImageStats(Image img, uint8* min, uint8* max) { ///
   assert (img->pixel != NULL);
   *min = 255;  // Defined in limits.h
   *max = 0;
+  // Iterating pixel by pixel and storing the current minimum and maximum gray levels in the respective pointers
   for (int i = 0; i < img->width * img->height; ++i) {
         uint8 pixelGV = img->pixel[i];
         if (pixelGV < *min) {
@@ -344,6 +346,7 @@ int ImageValidRect(Image img, int x, int y, int w, int h) { ///
 // The returned index must satisfy (0 <= index < img->width*img->height)
 static inline int G(Image img, int x, int y) {
   int index;
+  // Since we're working with a 1-based index
   assert(x >= 0 && x < img->width && y >= 0 && y < img->height);
   index = ((y-1) * img->width) + x;
   assert (0 <= index && index < img->width*img->height);
@@ -411,6 +414,7 @@ void ImageBrighten(Image img, double factor) { ///
     if (img->pixel[i] * factor <= img->maxval) {
       img->pixel[i] = img->pixel[i] * factor;
     }
+    // Saturates pixels at maxval
     else {
       img->pixel[i] = img->maxval;
     }
@@ -454,7 +458,7 @@ Image ImageRotate(Image img) { ///
             int xNew = y;
             int yNew = img->width - 1 - x;
 
-            // Calculate linear indices for both images
+            // Calculate linear indices for both images (using the G function was generating discrepancies between images)
             int imgIndex = y * img->width + x;
             int rotatedIndex = yNew * rotated->width + xNew;
 
@@ -517,11 +521,13 @@ Image ImageCrop(Image img, int x, int y, int w, int h) { ///
         fprintf(stderr, "Error: Memory allocation failed for cropped image.\n");
         exit(1);  // or return an error code
   }
+  // Crop the image
   for (int i = 0; i < h; ++i) {
         for (int j = 0; j < w; ++j) {
-            // Calculate linear indices for both the original and cropped images
+            // Calculate linear indices for both images
             int imgIndex = (y + i) * img->width + (x + j);
             int croppedIndex = i * w + j;
+            // Copy pixel value from the original to the cropped image
             cropped->pixel[croppedIndex] = img->pixel[imgIndex];
         }
   }
@@ -573,7 +579,7 @@ void ImageBlend(Image img1, int x, int y, Image img2, double alpha) { ///
             // Blend pixel values from img2 to img1
             uint8 blendedValue = (1.0 - alpha) * img1->pixel[img1Index] + alpha * img2->pixel[img2Index];
 
-            // Saturate the result to prevent overflows and underflows
+            // Saturate to avoid overflows and underflows
             if (blendedValue >= img2->maxval) {
               blendedValue = img2->maxval;
             }
@@ -597,13 +603,13 @@ int ImageMatchSubImage(Image img1, int x, int y, Image img2) { ///
             // Calculate linear indices for both images
             int img1Index = (y + i) * img1->width + (x + j);
             int img2Index = i * img2->width + j;
-            // If pixel values do not match, return 0 (false)
+            // If pixel values don't match, return 0
             if (img1->pixel[img1Index] != img2->pixel[img2Index]) {
                 return 0;
             }
         }
     }
-    // If all pixels match, return 1 (true)
+    // If pixels match, return 1
     return 1;
 }
 
@@ -621,7 +627,7 @@ int ImageLocateSubImage(Image img1, int* px, int* py, Image img2) { ///
             if (ImageMatchSubImage(img1, j, i, img2)) {
                 *px = j;
                 *py = i;
-                return 1;  // Match found
+                return 1;
             }
         }
   }
@@ -676,4 +682,3 @@ void ImageBlur(Image img, int dx, int dy) { ///
     // Destroy the temporary blurred image
     ImageDestroy(&blurredImg);
 }
-
