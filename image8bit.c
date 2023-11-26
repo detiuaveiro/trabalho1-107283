@@ -10,8 +10,8 @@
 /// 2013, 2023
 
 // Student authors (fill in below):
-// NMec:107283 Name: Nuno Vieira
-// NMec: 10
+// NMec: 107283 Name: Nuno Vieira
+// NMec: 106078 Name: João Vítor Batista
 // 
 // 
 // Date: 09/11/2023
